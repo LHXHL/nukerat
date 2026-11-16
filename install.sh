@@ -2,7 +2,7 @@
 
 # Copyright (C) 2026 Gustavo Henrique T.
 # SPDX-License-Identifier: GPL-3.0-or-later
-# See LICENSE in the repository root.
+# See LICENSE and DISCLAIMER.md in the repository root.
 
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

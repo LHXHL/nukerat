@@ -1,6 +1,6 @@
 # NukeRat: legal notice and disclaimer
 
-**Last updated:** September 29, 2026
+**Last updated:** November 16, 2026
 
 **NukeRat** is an **open source** post exploitation project for **cyber security professionals**. What follows supplements the repository `LICENSE` regarding limitation of liability.
 
@@ -25,6 +25,30 @@ It is not a consumer product nor a tool for unauthorized access to third party s
 The Author **condemns and does not support** any illicit use of NukeRat. The Author **does not** authorize, **does not** encourage, **does not** supervise, and **does not** take part in operations carried out by third parties with the Software.
 
 NukeRat is **not** intended for creating, distributing, or operating **malware** to attack third parties. Artifacts produced by anyone who misuses the Software for that purpose (implants, payloads, or tools for malicious use) **do not** represent the purpose of the project nor have the Author's support. Responsibility for that conduct lies solely with whoever engages in it.
+
+---
+
+## Third-party platforms and external C2
+
+NukeRat can route implant traffic through an **external C2** channel that the operator configures. That channel may be a service the operator reaches through **their own** API credentials. Mentions of **Telegram**, **Discord**, **Dropbox**, and similar names in the README, documentation, or source are **illustrative references only**: examples of third-party platforms that expose an API. They describe a class of possible transports. They are not a recommendation, an instruction, or permission to use those services.
+
+The Author:
+
+- **does not** endorse, encourage, or support use of any third-party platform **without authorization**, whether that authorization is missing from the owner of the systems under test or forbidden by the platform itself;
+- **does not** operate, host, monitor, or control accounts, bots, tokens, API keys, or traffic on Telegram, Discord, Dropbox, or any other third-party service;
+- **does not** supply credentials or infrastructure on those platforms. Anything of that kind is brought solely by the operator;
+- **has no** partnership, sponsorship, agency, or affiliation with the owners of those platforms. Names and trademarks belong to their respective owners and are used only to identify the kind of service an operator might connect.
+
+External C2 is a **transport option for authorized security work** (red team, purple team, pentest, audit, or lab), under permission from whoever is responsible for the systems, networks, and data in scope. It is **not** support for malware command-and-control, unauthorized access, fraud, or any other offense carried out through a consumer or cloud platform.
+
+Before enabling any external channel, the operator must **both**:
+
+1. hold **explicit authorization** covering the engagement and the systems in scope; and
+2. comply with the **terms of service, acceptable use policy, developer policy, and applicable law** of every third-party platform involved.
+
+If a platform prohibits automated abuse, covert command channels, malware distribution, or this kind of integration, the operator **must not** use it that way. A reference in this project **does not** override that platform's rules and **does not** permit use the platform has not allowed.
+
+The Author **condemns** use of NukeRat together with any third-party platform for unauthorized activity or for activity that platform does not allow. Account suspension, abuse reports, cooperation with authorities, and any other consequence of that conduct are the **operator's alone**. That conduct creates **no** agency, representation, or joint participation with the Author. To the fullest extent permitted by applicable law, the Author is **not liable** for how an operator uses, misuses, or connects third-party platforms through the Software.
 
 ---
 
