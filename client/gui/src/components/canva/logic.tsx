@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { getServers } from "@/api/system/config";
+import { getServers, subscribeServers } from "@/api/system/config";
 import { fetchServerNotifications, fetchServerCustomNotifications, type NotifyHost, type NotifyCustom } from "@/api/notification";
 import { DataFetch, type Session } from "@/api/sessions";
 import { pendingPanelParamsRef, type PanelOpenParams, type SessionSelectData } from "./workspace/logic";
@@ -135,42 +135,60 @@ export function useCanva() {
 
   useEffect(() => {
     let alive = true;
-    const ctrls: AbortController[] = [];
+    let ticket = 0;
+    const running = new Map<string, AbortController>();
 
-    getServers().then((servers) => {
-      for (const server of servers) {
-        const ctrl = new AbortController();
-        ctrls.push(ctrl);
-        (async () => {
-          while (alive) {
-            try {
-              const res = await fetchServerNotifications(server, ctrl.signal);
-              if (!alive) break;
-              if (res.hosts.length) setNotifyBatch((p) => [...p, ...res.hosts].slice(-5));
-            } catch (e) {
-              if (!alive || (e instanceof DOMException && e.name === "AbortError")) break;
-              await new Promise((r) => setTimeout(r, 8000));
+    const pull = () => {
+      const mine = ++ticket;
+      void getServers().then((servers) => {
+        if (!alive || mine !== ticket) return;
+        const keys = new Set<string>();
+        for (const server of servers) {
+          if (!server.token?.trim() || !server.ip?.trim() || !server.port?.trim()) continue;
+          const key = `${server.id}\0${server.ip}\0${server.port}\0${server.token}`;
+          keys.add(key);
+          if (running.has(key)) continue;
+          const ctrl = new AbortController();
+          running.set(key, ctrl);
+          (async () => {
+            while (alive && !ctrl.signal.aborted) {
+              try {
+                const res = await fetchServerNotifications(server, ctrl.signal);
+                if (!alive || ctrl.signal.aborted) break;
+                if (res.hosts.length) setNotifyBatch((p) => [...p, ...res.hosts].slice(-5));
+              } catch (e) {
+                if (!alive || ctrl.signal.aborted || (e instanceof DOMException && e.name === "AbortError")) break;
+                await new Promise((r) => setTimeout(r, 8000));
+              }
             }
-          }
-        })();
-        (async () => {
-          while (alive) {
-            try {
-              const res = await fetchServerCustomNotifications(server, ctrl.signal);
-              if (!alive) break;
-              if (res.custom.length) setNotifyBatch((p) => [...p, ...res.custom].slice(-5));
-            } catch (e) {
-              if (!alive || (e instanceof DOMException && e.name === "AbortError")) break;
-              await new Promise((r) => setTimeout(r, 8000));
+          })();
+          (async () => {
+            while (alive && !ctrl.signal.aborted) {
+              try {
+                const res = await fetchServerCustomNotifications(server, ctrl.signal);
+                if (!alive || ctrl.signal.aborted) break;
+                if (res.custom.length) setNotifyBatch((p) => [...p, ...res.custom].slice(-5));
+              } catch (e) {
+                if (!alive || ctrl.signal.aborted || (e instanceof DOMException && e.name === "AbortError")) break;
+                await new Promise((r) => setTimeout(r, 8000));
+              }
             }
-          }
-        })();
-      }
-    });
+          })();
+        }
+        for (const [key, ctrl] of running) {
+          if (keys.has(key)) continue;
+          ctrl.abort();
+          running.delete(key);
+        }
+      });
+    };
 
+    const stop = subscribeServers(pull);
+    pull();
     return () => {
       alive = false;
-      ctrls.forEach((c) => c.abort());
+      stop();
+      running.forEach((c) => c.abort());
     };
   }, []);
 

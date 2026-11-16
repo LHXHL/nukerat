@@ -13,6 +13,13 @@ export interface AppConfig {
   servers: ServerEntry[];
 }
 
+const serverListeners = new Set<() => void>()
+
+export function subscribeServers(listener: () => void): () => void {
+  serverListeners.add(listener)
+  return () => serverListeners.delete(listener)
+}
+
 export async function readConfig(): Promise<AppConfig> {
   const config = await window.electronAPI.invoke('config:read') as { servers?: ServerEntry[] }
   return { servers: config.servers ?? [] }
@@ -20,6 +27,7 @@ export async function readConfig(): Promise<AppConfig> {
 
 export async function writeConfig(config: AppConfig): Promise<void> {
   await window.electronAPI.invoke('config:write', config)
+  serverListeners.forEach((listener) => listener())
 }
 
 export async function getServers(): Promise<ServerEntry[]> {
@@ -44,4 +52,5 @@ export async function appendServers(extra: ServerEntry[]): Promise<void> {
   const raw = (await window.electronAPI.invoke('config:read')) as Record<string, unknown>
   const cur = (raw.servers as ServerEntry[] | undefined) ?? []
   await window.electronAPI.invoke('config:write', { ...raw, servers: [...cur, ...extra] })
+  serverListeners.forEach((listener) => listener())
 }
