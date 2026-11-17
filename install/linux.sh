@@ -319,16 +319,34 @@ install_server() {
   # pip packages install 
 
   cd "${main_dir}/server"
-  if ! command -v python3 >/dev/null 2>&1; then
-    echo "python3 is required." >&2
+  local py_bin=""
+  local py_cand
+  for py_cand in python3.13 python3.12 python3.11 python3; do
+    if command -v "${py_cand}" >/dev/null 2>&1; then
+      if "${py_cand}" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)'; then
+        py_bin="$(command -v "${py_cand}")"
+        break
+      fi
+    fi
+  done
+  if [[ -z "${py_bin}" ]]; then
+    echo "Python >= 3.11 is required (server uses typing.Self). Please install python3.11+ and retry." >&2
     exit 1
   fi
-  python3 -m venv venv
+  "${py_bin}" -m venv venv
   source venv/bin/activate
   pip install -r requirements.txt
 
   # sgn build (encoder)
 
+  if command -v rustc >/dev/null 2>&1; then
+    local rust_ver
+    rust_ver="$(rustc --version | awk '{print $2}')"
+    if [[ "$(printf '%s\n' "1.85.0" "${rust_ver}" | sort -V | head -n1)" != "1.85.0" ]]; then
+      echo "rustc >= 1.85.0 is required to build sgn (found ${rust_ver}; dependencies use edition2024). Install a newer toolchain via rustup." >&2
+      exit 1
+    fi
+  fi
   cd "${main_dir}/server/infra/bin/encoders/sgn"
   ./build.sh
 
