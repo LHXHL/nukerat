@@ -123,14 +123,14 @@ class FileServerListenerManager:
         config["name"] = name
         os.makedirs(content_dir, exist_ok=True)
 
-        # PR commit #8da6eee
+        # PR commit #8da6eee.
         bind_host = host
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             sock.bind((bind_host, port))
         except OSError as exc:
-            # PR commit #8da6eee
+            # PR commit #8da6eee.
             if exc.errno == errno.EADDRNOTAVAIL or isinstance(exc, socket.gaierror):
                 # When behind a CDN/proxy (e.g. Cloudflare), `host` resolves to a non-local IP;
                 # fall back to binding 0.0.0.0 while keeping `host` in metadata for clients/implants.
@@ -161,7 +161,7 @@ class FileServerListenerManager:
 
         app = make_app(content_dir, config)
         uvicorn_config = uvicorn.Config(
-            # PR commit #8da6eee
+            # PR commit #8da6eee.
             app=app, host=bind_host, port=port, log_level="info",
             access_log=False, log_config=log_config, server_header=False, **ssl_kwargs,
         )
