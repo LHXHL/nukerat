@@ -12,7 +12,7 @@
 <p align="center">
   <a href="https://nukerat.com/docs"><strong>Documentation</strong></a> ·
   <a href="https://nukerat.com/docs/armory"><strong>Armory</strong></a> ·
-  <a href="https://nukerat.com/docs/fast-setup"><strong>Tutorial</strong></a>
+  <a href="https://www.youtube.com/watch?v=3dOcPoVXv30&t=4s"><strong>Tutorial</strong></a>
 </p>
 
 ## About

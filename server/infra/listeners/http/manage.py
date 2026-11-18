@@ -164,12 +164,14 @@ class HttpListenerManager:
                 if r["host"] == host and r["port"] == port:
                     raise PortAlreadyInUseError(f"Port {port} on '{host}' is already in use")
 
+        # PR commit #8da6eee
         bind_host = host
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             sock.bind((bind_host, port))
         except OSError as exc:
+            # PR commit #8da6eee
             if exc.errno == errno.EADDRNOTAVAIL or isinstance(exc, socket.gaierror):
                 # When behind a CDN/proxy (e.g. Cloudflare), `host` resolves to a non-local IP;
                 # fall back to binding 0.0.0.0 while keeping `host` in metadata for clients/implants.
@@ -206,6 +208,7 @@ class HttpListenerManager:
         app.state.db = listener_utils
         app.include_router(make_router(cfg))
 
+        # PR commit #8da6eee
         config = uvicorn.Config(app=app, host=bind_host, port=port, log_level="info", access_log=False, log_config=log_config, server_header=False, **ssl_kwargs)
         server = ManagedServer(config)
         session_id = session_id or generate_tag()

@@ -319,6 +319,7 @@ install_server() {
   # pip packages install 
 
   cd "${main_dir}/server"
+  # PR commit #8da6eee
   local py_bin=""
   local py_cand
   for py_cand in python3.13 python3.12 python3.11 python3; do
@@ -339,6 +340,7 @@ install_server() {
 
   # sgn build (encoder)
 
+  # PR commit #8da6eee
   if command -v rustc >/dev/null 2>&1; then
     local rust_ver
     rust_ver="$(rustc --version | awk '{print $2}')"
