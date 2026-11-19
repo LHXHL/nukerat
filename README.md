@@ -49,8 +49,14 @@ NukeRat is a post exploitation framework for advanced Red Team operations, focus
 > [!TIP]
 > We recommend Kali Linux for NukeRat usage.
 
+### Default
 ```bash
 git clone https://github.com/nukeratframework/nukerat && cd nukerat && sudo bash install.sh all
+```
+
+### Docker
+```bash
+git clone https://github.com/nukeratframework/nukerat && cd nukerat && sudo bash install/docker/docker.sh all
 ```
 
 ## Tutorial
