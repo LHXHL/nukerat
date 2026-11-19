@@ -1,4 +1,4 @@
 """NukeRat team server release version."""
 
-__version__ = "1.4.10"
+__version__ = "1.5.0"
 
