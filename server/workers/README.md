@@ -1,3 +1,12 @@
 # Overview
 
-Folder related to the workers. Up to the present moment the only worker is the one related to NukeScript. This worker is responsible for creating a monitoring loop of the database for changes.
+Folder related to the workers.
+
+## Directories
+
+- `/nukescripts`:
+    - NukeScript worker; `main.py` is the entrypoint
+    - Monitors the database for changes and runs operator scripts
+- `/mcp_server`:
+    - MCP worker; `main.py` is the entrypoint
+    - stdio bridge for AI hosts against the team server REST API
