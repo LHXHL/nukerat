@@ -10,8 +10,9 @@
 </p>
 
 <p align="center">
-  <a href="https://nukerat.com/docs"><strong>Documentation</strong></a> ·
+  <a href="https://nukerat.com/docs"><strong>Docs</strong></a> ·
   <a href="https://nukerat.com/docs/armory"><strong>Armory</strong></a> ·
+  <a href="https://nukerat.com/docs/configuration"><strong>MCP</strong></a> ·
   <a href="https://www.youtube.com/watch?v=3dOcPoVXv30&t=4s"><strong>Tutorial</strong></a>
 </p>
 
@@ -34,6 +35,7 @@ NukeRat is a post exploitation framework for advanced Red Team operations, focus
 | Item | Description |
 | --- | --- |
 | Armory | +550 adapted BOF and .NET utilities |
+| MCP | MCP server support for external agents and tools (e.g. Claude, ARTEX, etc.) |
 | Communication | Custom C2 with external platforms (e.g. Telegram, Discord, etc.) |
 | Runtime evasion | Indirect syscalls, stack spoofing, sleep mask, AMSI/ETW patch, etc. |
 | Injections | Allocation modes: VirtualAlloc, section, and module stomping |
