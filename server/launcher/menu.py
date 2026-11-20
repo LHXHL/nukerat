@@ -33,6 +33,9 @@ def main_menu():
         elif command.startswith("db"):
             from .logic.db_cmd import main_db
             main_db(command)
+        elif command.startswith("mcp"):
+            from .logic.mcp_cmd import main_mcp
+            main_mcp(command)
         else:
             print("Command not found. Use 'help' to see the available commands.")
             sys.exit(1)
