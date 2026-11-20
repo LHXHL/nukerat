@@ -14,6 +14,10 @@ COMMANDS
     key add <name>              Create operator key
     key rem <name>              Remove operator key
 
+    mcp enable                  Enable MCP server
+    mcp disable                 Disable MCP server
+    mcp reauth                  Recreate operator key of MCP server
+
     venv list                   List installed python packages
     venv install <package>      Install a python package
     venv uninstall <package>    Uninstall a python package
