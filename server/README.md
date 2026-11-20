@@ -21,4 +21,6 @@ Root of the team server directory.
 - `/launcher`: Logic that runs before the server starts, including help-command handling
 - `/logs`: Server log files
 - `/venv`: Python virtual environment for the whole project
-- `/workers`: NukeScript worker, which runs on its own thread
+- `/workers`:
+    - NukeScript worker, which runs on its own thread
+    - MCP worker, stdio bridge for AI hosts (team server REST API)
