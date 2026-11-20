@@ -82,15 +82,15 @@ Or, if you prefer, see it through the documentation at [https://nukerat.com/docs
 
 You can read the full NukeRat documentation at [https://nukerat.com/docs](https://nukerat.com/docs). Available languages:
 
-| Language | Link |
-|----------|--------------|
-| English | [en-us](https://nukerat.com/docs) |
-| Spanish | [es-es](https://nukerat.com/docs?lang=es-es) |
-| Korean | [ko-kr](https://nukerat.com/docs?lang=ko-kr) |
-| Chinese (Simplified) | [zh-cn](https://nukerat.com/docs?lang=zh-cn) |
-| Russian | [ru](https://nukerat.com/docs?lang=ru) |
-| Persian | [fa-ir](https://nukerat.com/docs?lang=fa-ir) |
-| Japanese | [ja-jp](https://nukerat.com/docs?lang=ja-jp) |
+<p>
+  <a href="https://nukerat.com/docs"><strong>English</strong></a> ·
+  <a href="https://nukerat.com/docs?lang=es-es"><strong>Spanish</strong></a> ·
+  <a href="https://nukerat.com/docs?lang=ko-kr"><strong>Korean</strong></a> ·
+  <a href="https://nukerat.com/docs?lang=zh-cn"><strong>Chinese (Simplified)</strong></a> ·
+  <a href="https://nukerat.com/docs?lang=ru"><strong>Russian</strong></a> ·
+  <a href="https://nukerat.com/docs?lang=fa-ir"><strong>Persian</strong></a> ·
+  <a href="https://nukerat.com/docs?lang=ja-jp"><strong>Japanese</strong></a>
+</p>
 
 
 ## Gallery
