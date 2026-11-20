@@ -62,6 +62,7 @@ def config_operations(operation, *args):
         "server.armory",
         "server.aes_sync",
         "implants",
+        "mcp",
     )
 
     if operation == "path":
@@ -149,6 +150,12 @@ repository = https://github.com/nukeratframework/armory/
 
 [implants]
 relay_aes_key = {relay_aes_key}
+
+[mcp]
+enabled = false
+base_url =
+operator_key =
+tls_verify = true
 """
     conf_path.write_text(content, encoding="utf-8")
     return conf_path
@@ -245,6 +252,11 @@ def validate_config():
                 + ", ".join(sorted(bool_values))
             )
 
+    if parser.has_section("mcp"):
+        for key in ("enabled", "tls_verify"):
+            raw = parser.get("mcp", key, fallback="false" if key == "enabled" else "true").strip().lower()
+            if raw not in bool_values:
+                return f"Error: mcp.{key} must be one of {', '.join(sorted(bool_values))}"
     return None
 
 
@@ -299,6 +311,10 @@ def config_reset(key):
         "server.runtime.timeout_worker_healthcheck": "5",
         "server.runtime.proxy_headers": "true",
         "server.runtime.forwarded_allow_ips": "127.0.0.1",
+        "mcp.enabled": "false",
+        "mcp.base_url": "",
+        "mcp.operator_key": "",
+        "mcp.tls_verify": "true",
     }
     key = key.strip()
     if key == "server.keys.jwt_secret":
@@ -538,6 +554,35 @@ def load_config():
         raw = parser.get("server.nukescripts", "sandbox", fallback="false").strip().lower()
         nukescripts_sandbox = raw in ("1", "true", "yes", "on")
 
+    def mcp_bool(key, default=False):
+        # Reads a bool from the mcp section
+        if not parser.has_section("mcp"):
+            return default
+        raw = parser.get("mcp", key, fallback="").strip().lower()
+        if not raw:
+            return default
+        return raw in ("1", "true", "yes", "on")
+
+    def mcp_str(key, default=""):
+        # Reads a string from the mcp section
+        if not parser.has_section("mcp"):
+            return default
+        raw = parser.get("mcp", key, fallback="").strip()
+        return raw if raw else default
+
+    mcp_base_url = mcp_str("base_url", "")
+    if not mcp_base_url and parser.has_section("server"):
+        mcp_host = parser.get("server", "host", fallback="127.0.0.1").strip() or "127.0.0.1"
+        mcp_port = parser.get("server", "port", fallback="9000").strip() or "9000"
+        if mcp_host in ("0.0.0.0", "::", "[::]"):
+            mcp_host = "127.0.0.1"
+        if parser.has_section("server.tls"):
+            tls_raw = parser.get("server.tls", "tls", fallback="false").strip().lower()
+            mcp_scheme = "https" if tls_raw in ("1", "true", "yes", "on") else "http"
+        else:
+            mcp_scheme = "https" if ssl else "http"
+        mcp_base_url = f"{mcp_scheme}://{mcp_host}:{mcp_port}"
+
     def sandbox_value(key, default):
         # Reads one sandbox limit from the config
         if not parser.has_section("server.sandbox"):
@@ -600,6 +645,8 @@ def load_config():
         except ValueError:
             pass
 
+    mcp_key_line = mcp_str("operator_key", "")
+
     return {
         "paths": {"database": database},
         "database": {"max_cell_value_bytes": max_cell_value_bytes},
@@ -629,6 +676,12 @@ def load_config():
         "compiler": {"sandbox": build_sandbox},
         "nukescripts": {"sandbox": nukescripts_sandbox},
         "sandbox": sandbox_limits,
+        "mcp": {
+            "enabled": mcp_bool("enabled", False),
+            "base_url": mcp_base_url.rstrip("/") if mcp_base_url else "",
+            "operator_key": mcp_key_line,
+            "tls_verify": mcp_bool("tls_verify", True),
+        },
     }
 
 
