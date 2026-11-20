@@ -26,3 +26,4 @@ weasyprint==70.0
 pefile==2024.8.26
 Faker==40.44.0
 pproxy==2.7.9
+mcp[cli]==2.3.0
