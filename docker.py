@@ -70,6 +70,10 @@ COMMANDS
     server key add john                Create operator key
     server key rem john                Remove operator key
 
+    server mcp enable                  Enable MCP server
+    server mcp disable                 Disable MCP server
+    server mcp reauth                  Recreate operator key of MCP server
+
     server venv list                   List installed python packages
     server venv install <package>      Install a python package
     server venv uninstall <package>    Uninstall a python package
