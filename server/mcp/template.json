@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "nukerat": {
+      "command": "./server/venv/bin/python",
+      "args": ["./server/workers/mcp_server/main.py"],
+      "cwd": "./server/workers/mcp_server",
+      "env": {
+        "NUKERAT_BASE_URL": "http://127.0.0.1:9000",
+        "NUKERAT_TLS_VERIFY": "false"
+      }
+    }
+  }
+}
