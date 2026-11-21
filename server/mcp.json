@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "nukerat": {
-      "command": "./server/.venv/bin/python",
+      "command": "./server/venv/bin/python",
       "args": ["./server/workers/mcp_server/main.py"],
       "cwd": "./server/workers/mcp_server",
       "env": {
