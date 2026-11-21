@@ -9,7 +9,7 @@ Root of the team server directory.
     - Raw logic of all routes
     - Middlewares
     - Route schemas
-    - Mensagens de help
+    - Help messages
 - `/infra`:
     - Binaries (armory, migration shellcodes)
     - TLS certificates
@@ -18,7 +18,8 @@ Root of the team server directory.
     - Report files
     - Temporary files directory
     - Golang toolchain (for building binaries)
-- `/launcher`: Logic that runs before the server starts, including help-command handling
+- `/launcher`: Logic that runs before the server starts, including help command handling
+- `/mcp`: Utility files for MCP setup (`template.json`, `vars.sh`). The MCP worker runtime lives under `/workers/mcp_server`
 - `/logs`: Server log files
 - `/venv`: Python virtual environment for the whole project
 - `/workers`:
