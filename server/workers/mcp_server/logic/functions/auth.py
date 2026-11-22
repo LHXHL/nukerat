@@ -27,9 +27,8 @@ def nukerat_auth_check():
     description=(
         "Describes how this MCP worker authenticates to the team server. "
         "On 401 or missing credentials the operator runs ./nukerat.py server mcp reauth "
-        "or server mcp enable from the repo root, then reloads MCP. "
-        "Login uses mcp.operator_key (user:pass:secret) from server.conf "
-        "(or NUKERAT_OPERATOR_KEY with the same line in the environment)."
+        "or server mcp on from the repo root, then reloads MCP. "
+        "Login uses mcp.operator_key from server.conf as a single credential."
     ),
     annotations={"readOnlyHint": True, "destructiveHint": False, "openWorldHint": False},
 )
