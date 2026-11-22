@@ -2,8 +2,9 @@
 
 This folder holds utility files for setting up the NukeRat MCP server.
 
-- `template.json`: base configuration JSON for agents that use JSON, for example Cursor
-- `vars.sh`: helper script that prints the paths you need to configure the MCP server in some tools
+- `stdio_template.json`: Cursor/JSON config for MCP over stdio
+- `http_template.json`: Cursor/JSON config for MCP over Streamable HTTP
+- `vars.sh`: helper script that prints stdio command and HTTP host/port/path/access_token/url from server.conf
 
 # Where is the MCP server?
 
