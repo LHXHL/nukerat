@@ -63,6 +63,7 @@ def config_operations(operation, *args):
         "server.aes_sync",
         "implants",
         "mcp",
+        "mcp.http",
     )
 
     if operation == "path":
@@ -153,9 +154,17 @@ relay_aes_key = {relay_aes_key}
 
 [mcp]
 enabled = false
-base_url =
 operator_key =
-tls_verify = true
+mode = stdio
+
+[mcp.http]
+host = 127.0.0.1
+port = 9100
+path = /mcp
+tls = false
+certfile = none
+keyfile = none
+access_token =
 """
     conf_path.write_text(content, encoding="utf-8")
     return conf_path
@@ -253,10 +262,42 @@ def validate_config():
             )
 
     if parser.has_section("mcp"):
-        for key in ("enabled", "tls_verify"):
-            raw = parser.get("mcp", key, fallback="false" if key == "enabled" else "true").strip().lower()
-            if raw not in bool_values:
-                return f"Error: mcp.{key} must be one of {', '.join(sorted(bool_values))}"
+        raw = parser.get("mcp", "enabled", fallback="false").strip().lower()
+        if raw not in bool_values:
+            return f"Error: mcp.enabled must be one of {', '.join(sorted(bool_values))}"
+        mcp_mode = parser.get("mcp", "mode", fallback="stdio").strip().lower()
+        if mcp_mode and mcp_mode not in ("stdio", "http"):
+            return "Error: mcp.mode must be stdio or http"
+
+    if parser.has_section("mcp.http"):
+        raw_host = parser.get("mcp.http", "host", fallback="127.0.0.1").strip()
+        if not raw_host:
+            return "Error: mcp.http.host must not be empty"
+        raw_port = parser.get("mcp.http", "port", fallback="9100").strip()
+        try:
+            http_port = int(raw_port)
+        except ValueError:
+            return "Error: mcp.http.port must be an integer"
+        if http_port < 1 or http_port > 65535:
+            return "Error: mcp.http.port must be between 1 and 65535"
+        raw_path = parser.get("mcp.http", "path", fallback="/mcp").strip()
+        if raw_path and not raw_path.startswith("/"):
+            return "Error: mcp.http.path must start with /"
+        raw_tls = parser.get("mcp.http", "tls", fallback="false").strip().lower()
+        if raw_tls and raw_tls not in bool_values:
+            return f"Error: mcp.http.tls must be one of {', '.join(sorted(bool_values))}"
+        mcp_tls_on = raw_tls in ("1", "true", "yes", "on")
+        if mcp_tls_on:
+            mcp_cert = parser.get("mcp.http", "certfile", fallback="").strip()
+            mcp_key = parser.get("mcp.http", "keyfile", fallback="").strip()
+            if not mcp_cert:
+                return "Error: mcp.http.certfile is required when tls is enabled"
+            if not mcp_key:
+                return "Error: mcp.http.keyfile is required when tls is enabled"
+            if mcp_cert.lower() != "none" and not os.path.isfile(mcp_cert):
+                return f"Error: MCP TLS certfile not found ({mcp_cert})"
+            if mcp_key.lower() != "none" and not os.path.isfile(mcp_key):
+                return f"Error: MCP TLS keyfile not found ({mcp_key})"
     return None
 
 
@@ -312,9 +353,15 @@ def config_reset(key):
         "server.runtime.proxy_headers": "true",
         "server.runtime.forwarded_allow_ips": "127.0.0.1",
         "mcp.enabled": "false",
-        "mcp.base_url": "",
         "mcp.operator_key": "",
-        "mcp.tls_verify": "true",
+        "mcp.mode": "stdio",
+        "mcp.http.host": "127.0.0.1",
+        "mcp.http.port": "9100",
+        "mcp.http.path": "/mcp",
+        "mcp.http.tls": "false",
+        "mcp.http.certfile": "none",
+        "mcp.http.keyfile": "none",
+        "mcp.http.access_token": "",
     }
     key = key.strip()
     if key == "server.keys.jwt_secret":
@@ -570,18 +617,34 @@ def load_config():
         raw = parser.get("mcp", key, fallback="").strip()
         return raw if raw else default
 
-    mcp_base_url = mcp_str("base_url", "")
-    if not mcp_base_url and parser.has_section("server"):
+    mcp_host = "127.0.0.1"
+    mcp_port = "9000"
+    mcp_scheme = "http"
+    mcp_cert = ""
+    if parser.has_section("server"):
         mcp_host = parser.get("server", "host", fallback="127.0.0.1").strip() or "127.0.0.1"
         mcp_port = parser.get("server", "port", fallback="9000").strip() or "9000"
-        if mcp_host in ("0.0.0.0", "::", "[::]"):
-            mcp_host = "127.0.0.1"
-        if parser.has_section("server.tls"):
-            tls_raw = parser.get("server.tls", "tls", fallback="false").strip().lower()
-            mcp_scheme = "https" if tls_raw in ("1", "true", "yes", "on") else "http"
-        else:
-            mcp_scheme = "https" if ssl else "http"
-        mcp_base_url = f"{mcp_scheme}://{mcp_host}:{mcp_port}"
+    if mcp_host in ("0.0.0.0", "::", "[::]"):
+        mcp_host = "127.0.0.1"
+    if parser.has_section("server.tls"):
+        mcp_cert = parser.get("server.tls", "certfile", fallback="").strip()
+    tls_skip = {"", "none", "false", "null", "unset"}
+    cert_path = str(certfile or "").strip()
+    key_path = str(keyfile or "").strip()
+    if (
+        ssl
+        and cert_path.lower() not in tls_skip
+        and key_path.lower() not in tls_skip
+        and os.path.isfile(cert_path)
+        and os.path.isfile(key_path)
+    ):
+        mcp_scheme = "https"
+    mcp_base_url = f"{mcp_scheme}://{mcp_host}:{mcp_port}"
+    mcp_tls_verify = True
+    if mcp_host in ("127.0.0.1", "localhost", "::1"):
+        mcp_tls_verify = False
+    elif not mcp_cert or mcp_cert.lower() == "none":
+        mcp_tls_verify = False
 
     def sandbox_value(key, default):
         # Reads one sandbox limit from the config
@@ -646,6 +709,39 @@ def load_config():
             pass
 
     mcp_key_line = mcp_str("operator_key", "")
+    mcp_mode = mcp_str("mode", "stdio").lower()
+    if mcp_mode not in ("stdio", "http"):
+        mcp_mode = "stdio"
+
+    http_host = "127.0.0.1"
+    http_port = 9100
+    http_path = "/mcp"
+    http_tls = False
+    http_certfile = "none"
+    http_keyfile = "none"
+    http_access_token = ""
+    if parser.has_section("mcp.http"):
+        raw_http_host = parser.get("mcp.http", "host", fallback="").strip()
+        if raw_http_host:
+            http_host = raw_http_host
+        raw_http_port = parser.get("mcp.http", "port", fallback="").strip()
+        if raw_http_port:
+            http_port = int(raw_http_port)
+        raw_http_path = parser.get("mcp.http", "path", fallback="").strip()
+        if raw_http_path:
+            http_path = raw_http_path if raw_http_path.startswith("/") else "/" + raw_http_path
+        raw_http_tls = parser.get("mcp.http", "tls", fallback="false").strip().lower()
+        if raw_http_tls:
+            http_tls = raw_http_tls in ("1", "true", "yes", "on")
+        raw_http_cert = parser.get("mcp.http", "certfile", fallback="").strip()
+        if raw_http_cert:
+            http_certfile = raw_http_cert
+        raw_http_key = parser.get("mcp.http", "keyfile", fallback="").strip()
+        if raw_http_key:
+            http_keyfile = raw_http_key
+        raw_http_access_token = parser.get("mcp.http", "access_token", fallback="").strip()
+        if raw_http_access_token:
+            http_access_token = raw_http_access_token
 
     return {
         "paths": {"database": database},
@@ -680,7 +776,17 @@ def load_config():
             "enabled": mcp_bool("enabled", False),
             "base_url": mcp_base_url.rstrip("/") if mcp_base_url else "",
             "operator_key": mcp_key_line,
-            "tls_verify": mcp_bool("tls_verify", True),
+            "tls_verify": mcp_tls_verify,
+            "mode": mcp_mode,
+            "http": {
+                "host": http_host,
+                "port": http_port,
+                "path": http_path,
+                "tls": http_tls,
+                "certfile": http_certfile,
+                "keyfile": http_keyfile,
+                "access_token": http_access_token,
+            },
         },
     }
 
