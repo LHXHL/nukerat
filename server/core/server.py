@@ -38,6 +38,7 @@ try:
     from schemas.__exception__ import validation_exception_handler
     from middlewares.jwt import jwt_middleware
     from utils.nukescripts.core import start_worker
+    from utils.mcp.core import boot as boot_mcp
     print(" done")
 
 except Exception as e:
@@ -94,7 +95,25 @@ async def lifespan(app: FastAPI):
     srv = app_config["config"]
     scheme = srv.get("protocol", "http")
     host, port = srv["host"], srv["port"]
+    
+    mcp_out = await asyncio.to_thread(boot_mcp, app_config.get("mcp") or {})
+    if mcp_out.get("enabled") and mcp_out.get("mode") == "http":
+        print("Starting MCP HTTP worker ...", end="", flush=True)
+        if mcp_out.get("error"):
+            print()
+            print(f"\n[ \x1b[38;2;255;48;48mERROR\x1b[0m ] Unable to start MCP HTTP worker")
+            print(f"[ \x1b[38;2;255;48;48mERROR\x1b[0m ] {mcp_out['error']}")
+            exit(1)
+        print(" done")
     print(f"[ \x1b[38;2;0;238;0mOK\x1b[0m ] Server is running on {host}:{port} ({scheme}://{host}:{port})")
+    if mcp_out.get("enabled"):
+        if mcp_out.get("mode") == "http":
+            print(
+                f"[ \x1b[38;2;0;238;0mOK\x1b[0m ] MCP is running on {mcp_out['host']}:{mcp_out['port']} "
+                f"({mcp_out['scheme']}://{mcp_out['host']}:{mcp_out['port']}{mcp_out['path']})"
+            )
+        else:
+            print(f"[ \x1b[38;2;0;238;0mOK\x1b[0m ] MCP is running on stdio")
     yield
 
 
