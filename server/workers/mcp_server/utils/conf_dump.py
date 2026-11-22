@@ -32,7 +32,7 @@ def read_server_conf():
     return parser
 
 def server_public_url(parser):
-    # Builds a team server base URL from [server] and [server.tls] when mcp.base_url is empty
+    # Builds a team server base URL from [server] and [server.tls]
 
     if not parser.has_section("server"):
         return ""
@@ -40,10 +40,23 @@ def server_public_url(parser):
     host = parser.get("server", "host", fallback="127.0.0.1").strip() or "127.0.0.1"
     port = parser.get("server", "port", fallback="9000").strip() or "9000"
     tls = False
+    cert_raw = ""
+    key_raw = ""
 
     if parser.has_section("server.tls"):
         raw = parser.get("server.tls", "tls", fallback="false").strip().lower()
         tls = raw in ("1", "true", "yes", "on")
+        cert_raw = parser.get("server.tls", "certfile", fallback="").strip()
+        key_raw = parser.get("server.tls", "keyfile", fallback="").strip()
+    tls_skip = {"", "none", "false", "null", "unset"}
+    if (
+        not tls
+        or cert_raw.lower() in tls_skip
+        or key_raw.lower() in tls_skip
+        or not Path(cert_raw).is_file()
+        or not Path(key_raw).is_file()
+    ):
+        tls = False
 
     scheme = "https" if tls else "http"
 
@@ -76,17 +89,90 @@ def dump_mcp_config():
 
     parser = read_server_conf()
     enabled = parse_bool(mcp_text(parser, "enabled", "false"), False)
-    base_url = mcp_text(parser, "base_url", "")
-
-    if not base_url:
-        base_url = server_public_url(parser)
-
-    tls_verify = parse_bool(mcp_text(parser, "tls_verify", "true"), True)
+    base_url = server_public_url(parser)
     operator_key = mcp_text(parser, "operator_key", "")
+    tls_verify = True
+    verify_host = "127.0.0.1"
+    if parser.has_section("server"):
+        verify_host = parser.get("server", "host", fallback="127.0.0.1").strip() or "127.0.0.1"
+    if verify_host in ("0.0.0.0", "::", "[::]"):
+        verify_host = "127.0.0.1"
+    if verify_host in ("127.0.0.1", "localhost", "::1"):
+        tls_verify = False
+    elif parser.has_section("server.tls"):
+        cert_raw = parser.get("server.tls", "certfile", fallback="").strip()
+        if not cert_raw or cert_raw.lower() == "none":
+            tls_verify = False
+    mode = mcp_text(parser, "mode", "stdio").lower()
+    if mode not in ("stdio", "http"):
+        mode = "stdio"
+    http_host = "127.0.0.1"
+    http_port = 9100
+    http_path = "/mcp"
+    http_tls = False
+    http_certfile = "none"
+    http_keyfile = "none"
+    http_access_token = ""
+
+    if parser.has_section("mcp.http"):
+        host_raw = parser.get("mcp.http", "host", fallback="").strip()
+        if host_raw:
+            http_host = host_raw
+        port_raw = parser.get("mcp.http", "port", fallback="").strip()
+        if port_raw:
+            try:
+                parsed_port = int(port_raw)
+            except ValueError:
+                parsed_port = 9100
+            if parsed_port < 1 or parsed_port > 65535:
+                parsed_port = 9100
+            http_port = parsed_port
+        path_raw = parser.get("mcp.http", "path", fallback="").strip()
+        if path_raw:
+            http_path = path_raw if path_raw.startswith("/") else "/" + path_raw
+        tls_raw = parser.get("mcp.http", "tls", fallback="false").strip()
+        http_tls = parse_bool(tls_raw, False)
+        cert_raw = parser.get("mcp.http", "certfile", fallback="").strip()
+        if cert_raw:
+            http_certfile = cert_raw
+        key_raw = parser.get("mcp.http", "keyfile", fallback="").strip()
+        if key_raw:
+            http_keyfile = key_raw
+        access_token_raw = parser.get("mcp.http", "access_token", fallback="").strip()
+        if access_token_raw:
+            http_access_token = access_token_raw
 
     return {
         "enabled": enabled,
         "base_url": base_url.rstrip("/") if base_url else "",
         "operator_key": operator_key,
         "tls_verify": tls_verify,
+        "mode": mode,
+        "http": {
+            "host": http_host,
+            "port": http_port,
+            "path": http_path,
+            "tls": http_tls,
+            "certfile": http_certfile,
+            "keyfile": http_keyfile,
+            "access_token": http_access_token,
+        },
     }
+
+def persist_http_access_token(token):
+    # Writes mcp.http.access_token into server.conf and drops the old password key
+    value = str(token or "").strip()
+    if not value:
+        raise RuntimeError("mcp.http.access_token is empty")
+    path = server_conf_path()
+    parser = configparser.ConfigParser(interpolation=None)
+    parser.optionxform = str
+    if path.is_file():
+        parser.read(path, encoding="utf-8")
+    if not parser.has_section("mcp.http"):
+        parser.add_section("mcp.http")
+    parser.set("mcp.http", "access_token", value)
+    if parser.has_option("mcp.http", "password"):
+        parser.remove_option("mcp.http", "password")
+    with open(path, "w", encoding="utf-8") as handle:
+        parser.write(handle)
