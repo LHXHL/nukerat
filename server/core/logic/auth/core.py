@@ -11,13 +11,28 @@ from infra.database.database import User, sqlite_db
 
 async def main_auth(body):
     # Checks the operator and returns a jwt
+    operator_key = str(body.get("operator_key") or "").strip()
     username = str(body.get("user") or body.get("username") or "").strip()
     password = body.get("pass") or body.get("password")
     secret = str(body.get("secret") or "").strip()
+    
+    # Extra auth for the MCP server > it use full operator key instead of splited user/pass/secret
+    if operator_key:
+        if operator_key.count(":") < 2:
+            return await conclude_request(
+                {"status": "failure", "message": "operator_key is invalid"},
+                body=body,
+                type="auth",
+            )
+        username, password, secret = operator_key.split(":", 2)
+        username = username.strip()
+        password = str(password).strip()
+        secret = secret.strip()
+    # =============================================================================================
 
     if not username or not password or not secret:
         return await conclude_request(
-            {"status": "failure", "message": "user, pass and secret are required"},
+            {"status": "failure", "message": "operator_key is required"},
             body=body,
             type="auth",
         )
