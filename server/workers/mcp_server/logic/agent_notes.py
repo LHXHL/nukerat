@@ -1,6 +1,6 @@
 def operator_note(kind, *, detail="", mcp_enabled=True):
     # Single entry for agent/operator hints (MCP instructions and tool errors)
-    enable_cmd = "./nukerat.py server mcp enable"
+    enable_cmd = "./nukerat.py server mcp on"
     reauth_cmd = "./nukerat.py server mcp reauth"
 
     if kind == "enable_cmd":
@@ -17,7 +17,7 @@ def operator_note(kind, *, detail="", mcp_enabled=True):
 
     if kind == "missing_credentials":
         return (
-            "MCP operator_key missing (mcp.operator_key as user:pass:secret or NUKERAT_OPERATOR_KEY). "
+            "MCP operator_key missing (mcp.operator_key in server.conf). "
             f"Operator: {enable_cmd} or {reauth_cmd} from repo root, then reload MCP."
         )
 
