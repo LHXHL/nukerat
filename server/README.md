@@ -19,7 +19,7 @@ Root of the team server directory.
     - Temporary files directory
     - Golang toolchain (for building binaries)
 - `/launcher`: Logic that runs before the server starts, including help command handling
-- `/mcp`: Utility files for MCP setup (`template.json`, `vars.sh`). The MCP worker runtime lives under `/workers/mcp_server`
+- `/mcp`: Utility files for MCP setup (`stdio_template.json`, `http_template.json`, `vars.sh`). The MCP worker runtime lives under `/workers/mcp_server`
 - `/logs`: Server log files
 - `/venv`: Python virtual environment for the whole project
 - `/workers`:
