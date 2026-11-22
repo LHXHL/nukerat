@@ -21,7 +21,7 @@ def setup_logging():
     root.setLevel(logging.INFO)
 
 def main():
-    # Boots the MCP server on stdio for Cursor and other MCP hosts
+    # Boots MCP tools, then stdio or Streamable HTTP from mcp.mode
     setup_logging()
     config.load_settings()
 
@@ -29,6 +29,15 @@ def main():
         logger.warning(agent_notes.operator_note("disabled"))
 
     from logic.handlers import register_all_tools
+    from logic.http import run_http
 
     register_all_tools()
+    mode = str(config.mode or "stdio").strip().lower()
+    if mode not in ("stdio", "http"):
+        logger.error("invalid mcp.mode %s; use stdio or http", mode)
+        return
+    if mode == "http":
+        run_http()
+        return
+    logger.info("MCP stdio transport started")
     server.run(transport="stdio")
