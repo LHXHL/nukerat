@@ -10,4 +10,4 @@ The NukeRat MCP worker. `main.py` is the entrypoint, and MCP hosts run it over s
     - MCP tool handlers
 - `/utils`:
     - Worker import path setup
-    - Operator connection settings from the environment
+    - Operator connection settings from server.conf
