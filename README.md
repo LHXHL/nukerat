@@ -30,6 +30,13 @@ NukeRat is a post exploitation framework for advanced Red Team operations, focus
   </a>
 </div>
 
+### Compatible with ARTEX (and similar tools)
+
+NukeRat is fully compatible with ARTEX and similar tools, so you can automate post-exploitation with ease. See the videos below for details.
+
+- [(YouTube) How to Integrate ARTEX With NukeRat C2](https://www.youtube.com/watch?v=tWhJsWjznBo)
+- [(YouTube) POC: ARTEX using NukeRat C2 to get SYSTEM access](https://www.youtube.com/watch?v=P4OKArs6lzE)
+
 ## Features
 
 | Item | Description |
