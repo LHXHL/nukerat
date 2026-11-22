@@ -133,14 +133,10 @@ def dispatch_http(client, method, url, headers, body=None, params=None):
 def login_for_token(client):
     # Obtains a JWT from the team server login endpoint
 
-    if not config.operator_user or not config.operator_pass or not config.operator_secret:
+    if not config.operator_key_line:
         raise RuntimeError(agent_notes.operator_note("missing_credentials"))
 
-    body = {
-        "user": config.operator_user,
-        "pass": config.operator_pass,
-        "secret": config.operator_secret,
-    }
+    body = {"operator_key": config.operator_key_line}
     response = client.post(f"{config.base_url}/auth/login", json=body)
 
     if response.status_code == 401:
