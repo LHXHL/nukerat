@@ -70,9 +70,18 @@ COMMANDS
     server key add john                Create operator key
     server key rem john                Remove operator key
 
-    server mcp enable                  Enable MCP server
-    server mcp disable                 Disable MCP server
+    server mcp [on|off]                Enable or disable MCP server
     server mcp reauth                  Recreate operator key of MCP server
+    server mcp mode [http|stdio]       Set MCP server mode
+
+    server mcp tls [true|false]        Enable or disable TLS
+    server mcp create-tls              Create a self signed cert and enable TLS
+    server mcp host <host>             Set MCP HTTP host
+    server mcp port <port>             Set MCP HTTP port
+    server mcp path <path>             Set MCP HTTP path
+    server mcp certfile <file>         Set MCP HTTP certfile
+    server mcp keyfile <file>          Set MCP HTTP keyfile
+    server mcp access_token <token>    Set MCP HTTP access token
 
     server venv list                   List installed python packages
     server venv install <package>      Install a python package
