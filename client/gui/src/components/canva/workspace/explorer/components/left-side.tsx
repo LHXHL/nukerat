@@ -1,5 +1,6 @@
 import { ChevronRight, ChevronDown, Folder, FolderOpen, File } from "lucide-react";
 import {
+  buildPathString,
   getChildren,
   isFile,
   useLeftSideTree,
@@ -15,6 +16,7 @@ const TreeRow = ({
   isOpen,
   hasSubs,
   isFileNode,
+  filePath,
   onClick,
   onDoubleClick,
   onChevronClick,
@@ -25,11 +27,13 @@ const TreeRow = ({
   isOpen: boolean;
   hasSubs: boolean;
   isFileNode: boolean;
+  filePath?: string;
   onClick: () => void;
   onDoubleClick: () => void;
   onChevronClick?: () => void;
 }) => (
   <div
+    data-explorer-file={filePath}
     className={`flex items-center gap-[3px] pr-2 py-[3px] mx-[10px] my-[1px] rounded-[6px] cursor-pointer select-none ${isSelected ? "bg-[#252525]" : "bg-transparent"}`}
     style={{ paddingLeft: depth * 12 + 4 }}
     onClick={onClick}
@@ -96,6 +100,7 @@ const TreeNode = ({
         isOpen={isOpen}
         hasSubs={hasSubs}
         isFileNode={isFileNode}
+        filePath={isFileNode ? buildPathString(path) : undefined}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
         onChevronClick={!isFileNode ? handleChevronClick : undefined}
