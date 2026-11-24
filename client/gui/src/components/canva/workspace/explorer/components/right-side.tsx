@@ -5,6 +5,7 @@ import ContentView from "./content-view";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { UtcTableColumnHeader } from "@/components/canva/utils/utc-date";
 import {
+  buildPathString,
   explorerTableColumns,
   getItemSubtitle,
   isFile,
@@ -197,8 +198,10 @@ const RightSide = ({
                 const nameKey = `grid:${currentPath.join("/")}:${name}`;
                 const subtitle = getItemSubtitle(name, nodeVal, fileNode);
 
+                const filePath = fileNode ? buildPathString([...currentPath, name]) : undefined;
                 const itemCard = (
                   <div
+                    data-explorer-file={filePath}
                     onClick={() => fileNode && onFileClick([...currentPath, name])}
                     onDoubleClick={() => !fileNode && onExpand([...currentPath, name])}
                     onDragStart={(e) => e.preventDefault()}
@@ -274,8 +277,10 @@ const RightSide = ({
                 const nameKey = `list:${currentPath.join("/")}:${name}`;
                 const nv = nodeVal as { size?: unknown; modified?: string };
 
+                const filePath = fileNode ? buildPathString([...currentPath, name]) : undefined;
                 const row = (
                   <div
+                    data-explorer-file={filePath}
                     onClick={() => fileNode && onFileClick([...currentPath, name])}
                     onDoubleClick={() => !fileNode && onExpand([...currentPath, name])}
                     onDragStart={(e) => e.preventDefault()}
