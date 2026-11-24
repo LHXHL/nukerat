@@ -69,6 +69,7 @@ export type ExplorerMenuRuntime = {
   canForward: () => boolean;
   canDownload: () => boolean;
   canCopyContext: () => boolean;
+  prepareFromTarget: (target: EventTarget | null) => void;
   goBack: () => void;
   goForward: () => void;
   refresh: () => void;
