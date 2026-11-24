@@ -120,15 +120,16 @@ proc run_ls*(args: string; buf: var openArray[char]): int =
   sort(entries, proc(a, b: DirEntry): int =
     # Compares two directory entry names
     cmp(a.name, b.name))
-  var body: array[8192, char]
+  var body: seq[char]
   var pos = 0
   var count = 0
   const dateW = 19
   const sizeW = 8
   const typeW = 4
   for ent in entries:
-    if pos + 320 >= body.len:
-      break
+    let lineNeed = dateW + 1 + sizeW + 2 + typeW + 2 + ent.name.len + 1
+    if pos + lineNeed > body.len:
+      body.setLen(max(pos + lineNeed, body.len * 2))
     let full = joinPath(dir, ent.name)
     let dateStr = formatPathMtime(full)
     let sizeStr = entrySize(full, ent.isDir)
@@ -144,7 +145,8 @@ proc run_ls*(args: string; buf: var openArray[char]): int =
   let hdr = obf("total ") & $count & obf("\n")
   if hdr.len + pos > buf.len: return -1
   copyMem(addr buf[0], unsafeAddr hdr[0], hdr.len)
-  copyMem(addr buf[hdr.len], addr body[0], pos)
+  if pos > 0:
+    copyMem(addr buf[hdr.len], addr body[0], pos)
   hdr.len + pos
 
 proc run_pwd*(buf: var openArray[char]): int =
