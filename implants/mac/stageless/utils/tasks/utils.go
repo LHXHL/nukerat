@@ -11,8 +11,6 @@ import (
 	"stageless/utils/obf"
 )
 
-const ThreadBufferContent = 32 * 1024 * 1024
-
 var OutSnap []uint32
 
 var runDispatch func(cmdType, mode, raw, args, input, params, host, taskTag string) []byte
@@ -53,11 +51,10 @@ func functionOfWorker(wid uint32) {
 			raw = ""
 		case out == nil:
 			failed = true
-		case len(out) > ThreadBufferContent:
-			failed = true
 		default:
-			failed = false
-			raw = string(out)
+			var ok bool
+			raw, ok = TaskOutputFromBytes(out)
+			failed = !ok
 		}
 	}
 
