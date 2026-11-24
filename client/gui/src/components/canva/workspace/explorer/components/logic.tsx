@@ -4,6 +4,7 @@ import { DataFetch } from "@/api/folders";
 import type { Session } from "@/api/sessions";
 import { explorerMenuRuntimeRef } from "@/components/ui/rigth-click-menu.tsx";
 import { utcTableColumnTitle } from "@/components/canva/utils/utc-date";
+import { executeCommand } from "@/components/canva/workspace/terminal/components/logic";
 
 // types -----------------------------------------------------------------------
 
@@ -191,6 +192,11 @@ export function isImage(contentB64: string): string | null {
   }
 
   return null;
+}
+
+function quoteRemotePath(path: string): string {
+  if (!/[\s"]/.test(path)) return path;
+  return `"${path.replace(/"/g, '\\"')}"`;
 }
 
 export function downloadBase64File(
@@ -695,11 +701,38 @@ export function useExplorerWindow(
   }, [history, historyIndex]);
 
   const canDownloadFile = !!fileContent && hasValidBase64Content(fileContent.contentB64);
+  const menuFilePathRef = useRef<string | null>(null);
+  const selectedHostRef = useRef(selectedHost);
+  selectedHostRef.current = selectedHost;
 
   const onDownloadFile = useCallback(() => {
     if (!fileContent) return;
     downloadBase64File(fileContent.contentB64, fileContent.fileName);
   }, [fileContent]);
+
+  const downloadRemoteFile = useCallback(async (filePath: string) => {
+    const host = selectedHostRef.current;
+    if (!host || !filePath.trim()) return;
+    const { output, cancelled } = await executeCommand(
+      `download -f ${quoteRemotePath(filePath)}`,
+      [],
+      host.host.tag,
+      host.server,
+      { source_terminal: "gui-explorer", host_tag: host.host.tag }
+    );
+    if (cancelled || output === "Download cancelled") return;
+    const message =
+      typeof output === "string"
+        ? output
+        : output && typeof output === "object" && "message" in output
+          ? String((output as { message?: unknown }).message ?? "")
+          : "";
+    if (/successfully/i.test(message)) {
+      toast.success(message.trim() || "File downloaded");
+      return;
+    }
+    if (message.trim()) toast.error(message.trim());
+  }, []);
 
   const pathDisplay = formatPathDisplay(currentPath);
   const [pathInputValue, setPathInputValue] = useState(pathDisplay);
@@ -750,15 +783,28 @@ export function useExplorerWindow(
     controlsDisabled,
     canBack: () => canBackRef.current,
     canForward: () => canForwardRef.current,
-    canDownload: () => canDownloadRef.current,
+    canDownload: () => Boolean(menuFilePathRef.current) || canDownloadRef.current,
     canCopyContext: () => {
       const node = getNodeAtPath(explorerTreeRef.current, currentPathRef.current);
       return Boolean(node && getChildren(node).length > 0);
     },
+    prepareFromTarget: (target) => {
+      const el = target instanceof HTMLElement ? target : null;
+      const row = el?.closest("[data-explorer-file]");
+      const path = row?.getAttribute("data-explorer-file")?.trim() ?? "";
+      menuFilePathRef.current = path.length > 0 ? path : null;
+    },
     goBack,
     goForward,
     refresh: () => fetchExplorer(currentPathRef.current),
-    download: onDownloadFile,
+    download: () => {
+      const path = menuFilePathRef.current;
+      if (path) {
+        void downloadRemoteFile(path);
+        return;
+      }
+      onDownloadFile();
+    },
     setGridView: () => setViewMode("grid"),
     setListView: () => setViewMode("list"),
     copyContext: copyExplorerContext,
