@@ -8,7 +8,23 @@ import (
 	"stageless/utils/obf"
 )
 
-const TasksBufferMax = uint64(700) * 1024 * 1024
+const (
+	TasksBufferMax      = uint64(700) * 1024 * 1024
+	TaskBufferFloor     = 4096
+	ThreadBufferContent = 32 * 1024 * 1024
+)
+
+// TaskOutputFromBytes keeps only command output that fits the worker buffer (same as Linux thread buf).
+func TaskOutputFromBytes(out []byte) (raw string, ok bool) {
+	if out == nil {
+		return "", false
+	}
+	n := len(out)
+	if n > ThreadBufferContent {
+		return "", false
+	}
+	return string(out[:n]), true
+}
 
 func createJSON(work TaskRecord, raw string, failed bool) string {
 	// Builds the JSON result for a finished task
