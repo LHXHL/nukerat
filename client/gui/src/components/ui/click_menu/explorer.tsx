@@ -20,6 +20,7 @@ export function createExplorerBridge(): PanelEditMenuBridge | null {
     readValue: () => rt.getPathInput(),
     writeValue: (_, v) => rt.setPathInput(v),
     canEdit: () => !off(),
+    prepareMenu: (t) => rt.prepareFromTarget(t),
     getCustomMenuItems: () => [
       menuAction("Back", ArrowLeft, () => rt.goBack(), () => !rt.canBack() || off()),
       menuAction("Forward", ArrowRight, () => rt.goForward(), () => !rt.canForward() || off()),
