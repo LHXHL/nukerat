@@ -8,6 +8,7 @@ import (
 	"stageless/utils/macapi"
 	general "stageless/utils/general"
 	"stageless/utils/obf"
+	"stageless/utils/tasks"
 )
 
 func note(prefix, text string) []byte {
@@ -190,7 +191,7 @@ func RunCat(args string) []byte {
 	if args == "" || !macapi.PathExists(args) {
 		return nil
 	}
-	return macapi.ReadPathToBuf(args, bufCap)
+	return macapi.ReadPathToBuf(args, tasks.ThreadBufferContent)
 }
 
 func RunEcho(args string) []byte {
