@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"stageless/utils/obf"
+	"stageless/utils/tasks"
 )
 
 func RunPreview(args, params string) []byte {
@@ -37,8 +38,8 @@ func RunPreview(args, params string) []byte {
 			}
 		}
 	}
-	if limit > bufCap {
-		limit = bufCap
+	if limit > tasks.ThreadBufferContent {
+		limit = tasks.ThreadBufferContent
 	}
 	f, err := os.Open(path)
 	if err != nil {
