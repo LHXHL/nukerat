@@ -9,6 +9,7 @@ import ../../capabilities/filesystem
 
 # ===============================================
 
+const thread_buffer_content* = int(32'u64 * 1024 * 1024)
 var outSnap*: seq[uint32]
 
 # ===============================================
@@ -31,16 +32,7 @@ proc function_of_thread(param: pointer): pointer {.noconv.} =
   var work = move(got[1])
   var code = -1
   var raw = ""
-  let (bufLen, bufOk) = calculateBufferSize(0, work)
-  if not bufOk:
-    var over = work
-    over.running = false
-    over.done = true
-    over.result = create_json(work, obf("Output is too big (>=32 MB)"), true)
-    over.pendingOut = over.result.len > 0
-    discard update_task(tr.taskId, over)
-    return nil
-  var buf = newSeq[char](bufLen)
+  var buf = newSeq[char](thread_buffer_content)
   let n = run(
     work.cmdType, work.mode, work.raw, work.args, work.input, work.params, work.host,
     work.tag, buf)
@@ -49,14 +41,9 @@ proc function_of_thread(param: pointer): pointer {.noconv.} =
   elif n == 0:
     code = 0
   else:
-    let (_, rawOk) = calculateBufferSize(n, tasks.TaskRecord())
-    if not rawOk:
-      raw = obf("Output is too big (>=32 MB)")
-      code = 0
-    else:
-      raw = newString(n)
-      copyMem(addr raw[0], addr buf[0], n)
-      code = 0
+    raw = newString(n)
+    copyMem(addr raw[0], addr buf[0], n)
+    code = 0
   buf.setLen(0)
   work.input = ""
   var done = work
