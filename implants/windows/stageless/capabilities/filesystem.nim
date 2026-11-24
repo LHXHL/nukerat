@@ -91,9 +91,10 @@ proc run_ls*(args: string; buf: var openArray[char]): int =
   let h = findFirstFileW(addr wpat[0], addr data[0])
   if h == cast[pointer](-1): return -1
   defer: discard findClose(h)
-  var body: array[8192, char]
+  var body: seq[char]
   var pos = 0
   var count: culong = 0
+  const dateW = 19
   while true:
     let attrs = rdLe32(data, 0)
     let name = cast[ptr UncheckedArray[Wchar]](addr data[44])
@@ -101,8 +102,9 @@ proc run_ls*(args: string; buf: var openArray[char]): int =
       zeroMem(addr data[0], data.len)
       if findNextFileW(h, addr data[0]) == 0: break
       continue
-    if pos + 320 >= body.len: break
-    const dateW = 19
+    let lineNeed = dateW + 1 + 8 + 2 + 4 + 2 + 259 + 1
+    if pos + lineNeed > body.len:
+      body.setLen(max(pos + lineNeed, body.len * 2))
     const sizeW = 8
     const typeW = 4
     var st: array[16, byte]
@@ -140,7 +142,8 @@ proc run_ls*(args: string; buf: var openArray[char]): int =
   let hdr = obf("total ") & $count & "\n"
   if hdr.len + pos > buf.len: return -1
   copyMem(addr buf[0], unsafeAddr hdr[0], hdr.len)
-  copyMem(addr buf[hdr.len], addr body[0], pos)
+  if pos > 0:
+    copyMem(addr buf[hdr.len], addr body[0], pos)
   hdr.len + pos
 
 proc run_pwd*(buf: var openArray[char]): int =
