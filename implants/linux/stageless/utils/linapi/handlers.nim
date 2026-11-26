@@ -8,7 +8,7 @@ from posix import
   close, closedir, dup2, execvp, fork, getcwd, gethostname, getpid,
   getpwuid, getgrgid, getuid, kill, localtime_r, mkdir, nanosleep, opendir, open, pipe,
   Gid,
-  pthread_cancel, pthread_create, pthread_join, pthread_self,
+  pthread_cancel, pthread_create, pthread_detach, pthread_join, pthread_self,
   read, readdir, rmdir, stat, strftime, unlink, uname, waitpid, write,
   AddrInfo, Sockaddr_in, Sockaddr_un, Timeval, InAddr, TSa_Family, Suseconds,
   getaddrinfo, freeAddrInfo, htons
@@ -175,6 +175,10 @@ proc spawnPthread*(tid: var Pthread; fn: proc(param: pointer): pointer {.noconv.
 proc joinPthread*(tid: Pthread) =
   # Waits until a pthread finishes
   discard pthread_join(tid, nil)
+
+proc detachPthread*(tid: Pthread): bool =
+  # Marks a pthread as detached so its stack/TLS/arena are reclaimed on exit
+  pthread_detach(tid) == 0
 
 proc currentPthread*(): Pthread =
   # Returns the current pthread handle
