@@ -16,6 +16,10 @@ var outSnap*: seq[uint32]
 
 proc function_of_thread(param: pointer): pointer {.noconv.} =
   # Runs one task on a worker thread and stores the result
+  # Detach self so glibc reclaims this thread's stack, TLS and per-thread
+  # malloc arena when it exits. Without this every task leaks ~12-20 KB of
+  # RSS because nobody ever joins the worker pthread.
+  discard detachPthread(currentPthread())
   let wid = cast[ptr uint32](param)[]
   dealloc(param)
   defer:
