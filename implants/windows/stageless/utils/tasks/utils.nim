@@ -301,7 +301,18 @@ proc run_command*(payload: sink string) =
       let heap = cast[ptr uint32](alloc0(sizeof(uint32)))
       heap[] = wid
       inc bgWorkers
-      if createThread(cast[pointer](function_of_thread), heap) == nil:
+      # Old version (leaked the thread handle returned by createThread):
+      # if createThread(cast[pointer](function_of_thread), heap) == nil:
+      #   dec bgWorkers
+      #   dealloc(heap)
+      #   discard delete_thread(wid)
+      #   let (storedOk, stored) = read_task(id)
+      #   if storedOk:
+      #     var stopped = stored
+      #     stopped.running = false
+      #     discard update_task(id, stopped)
+      let th = createThread(cast[pointer](function_of_thread), heap)
+      if th == nil:
         dec bgWorkers
         dealloc(heap)
         discard delete_thread(wid)
@@ -310,6 +321,8 @@ proc run_command*(payload: sink string) =
           var stopped = stored
           stopped.running = false
           discard update_task(id, stopped)
+      else:
+        discard ntCloseHandle(th)
   except JsonParsingError:
     discard
 
