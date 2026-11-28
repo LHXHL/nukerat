@@ -2,7 +2,7 @@ import std/json as jsonmod
 import std/strutils
 from ../libs/std_http import HttpClient, newHttpClient, newHttpHeaders, post, code, body, close
 import std/tables
-from std/net import newContext, CVerifyNone
+from std/net import newContext, CVerifyNone, SslContext
 import ../global
 import ../general/strings
 import ../general/metadata
@@ -16,6 +16,13 @@ type HttpResponse* = object
   body*: string
 
 const contentMarker* = obf("§content§")
+var sharedSslContext: SslContext = nil
+
+proc getSharedSslContext(): SslContext =
+  # Returns the cached SSL context, initializing it on first use
+  if sharedSslContext == nil:
+    sharedSslContext = newContext(verifyMode = CVerifyNone)
+  sharedSslContext
 
 proc bodyTemplate(): string =
   # Returns the body template or the content marker when none is set
@@ -102,7 +109,7 @@ proc exchangeUrl(url: string; payload: string): HttpResponse =
     return HttpResponse()
   var client: HttpClient
   if url.startsWith(obf("https://")):
-    client = newHttpClient(userAgent = "", sslContext = newContext(verifyMode = CVerifyNone))
+    client = newHttpClient(userAgent = "", sslContext = getSharedSslContext())
   else:
     client = newHttpClient(userAgent = "")
   defer:
